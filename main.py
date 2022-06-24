@@ -1,68 +1,87 @@
 import cv2, numpy as np, matplotlib.pyplot as plt
+from cv2 import Stitcher
+import os
 
-mtx = np.array([[351.169058, 0.000000, 330.784880],
+### camera matrix, Homography - CAM0
+
+mtx_cam0 = np.array([[351.169058, 0.000000, 330.784880],
                 [0.000000, 351.657223, 239.471923],
                 [0.000000, 0.000000, 1.000000]])
-dist = np.array([-0.325330, 0.091562, 0.000301, 0.000526, 0.000000])
+
+dist_cam0 = np.array([-0.325330, 0.091562, 0.000301, 0.000526, 0.000000])
+
+H_cam0 = np.array([[-1.51455476e-01, -1.09276258e+00,  3.05878149e+02],
+[-3.52454260e-02, -1.17820424e+00,  3.34907073e+02],
+[-1.01942681e-04, -4.11129016e-03,  1.00000000e+00]])
+
+#F0_pt1 = np.array([[147, 302], [511, 297], [211, 282], [450, 277]], dtype=np.float32) #[[147, 297], [511, 292], [211, 277], [450, 272]
+#F0_pt2 = np.array([[180, 90], [360, 90], [180, 0], [360, 0]], dtype=np.float32)
+
+F0_pt1 = np.array([[153, 355], [501, 345],[244, 296],[417, 290]], dtype=np.float32)
+F0_pt2 = np.array([[230, 177], [315, 172], [230, 82],[315, 72]], dtype=np.float32)
+H_cam0 = cv2.getPerspectiveTransform(F0_pt1, F0_pt2)
+
+ ### camera matrix, Homography - CAM1
+
+mtx_cam1 = np.array([[522.047976, 0.000000, 312.409819],
+                [0.000000, 522.667306, 263.691174],
+                [0.000000, 0.000000, 1.000000]])
+
+dist_cam1 = np.array([0.052595, -0.175610, 0.002809, -0.001501, 0.000000])
+
+H_cam1 = np.array([[-4.30081067e+00,  5.21520818e+00,  3.05229303e+02],
+[-3.87074782e+00 , 4.64961780e+00, -2.48365117e+02],
+[-1.66533940e-02,  1.67764342e-02 ,  1.00000000e+00]])
+
+F1_pt1 = np.array([[98, 135], [295, 299], [134, 209], [363, 382]], dtype=np.float32)
+F1_pt2 = np.array([[365, 0], [550, 0], [365, 90], [560, 90]], dtype=np.float32)
+H_cam1 = cv2.getPerspectiveTransform(F1_pt1, F1_pt2)
 
 
-#### Left
-left = cv2.imread("Left.png", cv2.IMREAD_COLOR)
-und_left = cv2.undistort(left, mtx, dist, None)
-rot_left = cv2.rotate(und_left, cv2.ROTATE_90_COUNTERCLOCKWISE)
-
-L_pt1 = np.array([[355, 630], [275, 420], [275, 305], [355, 305]], dtype=np.float32)
-L_pt2 = np.array([[180, 360], [0, 360], [0, 270], [180, 270]], dtype=np.float32)
-
-H_L = cv2.getPerspectiveTransform(L_pt1, L_pt2)
-dst_L = cv2.warpPerspective(rot_left, H_L, (540, 540), None, cv2.INTER_CUBIC)
-dst_L[:,270:] = 0
-
-#### Right
-right = cv2.imread("Right.png", cv2.IMREAD_COLOR)
-und_right = cv2.undistort(right, mtx, dist, None)
-rot_right = cv2.rotate(und_right, cv2.ROTATE_90_CLOCKWISE)
-
-R_pt1 = np.array([[122, -2], [200, 219], [202, 337], [123, 337]], dtype=np.float32)
-R_pt2 = np.array([[360, 180], [540, 180], [540, 270], [360, 270]], dtype=np.float32)
-
-H_R = cv2.getPerspectiveTransform(R_pt1, R_pt2)
-dst_R = cv2.warpPerspective(rot_right, H_R, (540, 540), None, cv2.INTER_CUBIC)
-dst_R[:,:270] = 0
-
-#### Front
-front = cv2.imread("front.png", cv2.IMREAD_COLOR)
-und_front = cv2.undistort(front, mtx, dist, None)
-
-# plt.imshow(und_front); plt.show()
-F_pt1 = np.array([[163, 295], [221, 274], [455, 272], [511, 292]], dtype=np.float32)
-F_pt2 = np.array([[180, 90], [180, 0], [360, 0], [360, 90]], dtype=np.float32)
-
-H_F = cv2.getPerspectiveTransform(F_pt1, F_pt2)
-dst_F = cv2.warpPerspective(und_front, H_F, (540, 540), None, cv2.INTER_CUBIC)
-dst_F[270:,:] = 0
-
-#### back
-back = cv2.imread("Back.png", cv2.IMREAD_COLOR)
-und_back = cv2.undistort(back, mtx, dist, None)
-rot_back = cv2.rotate(und_back, cv2.ROTATE_180)
-
-# plt.imshow(und_back); plt.show()
-# plt.imshow(rot_back); plt.show()
-B_pt1 = np.array([[470, 188], [389, 215], [208, 215], [122, 189]], dtype=np.float32)
-B_pt2 = np.array([[360, 450], [360, 540], [180, 540], [180, 450]], dtype=np.float32)
-
-H_B = cv2.getPerspectiveTransform(B_pt1, B_pt2)
-dst_B = cv2.warpPerspective(rot_back, H_B, (540, 540), None, cv2.INTER_CUBIC)
-dst_B[:360,:] = 0
+ # Image Read
+path_cam0 = "/home/milly/svm/multi2/cam00"
+path_cam1 = "/home/milly/svm/multi2/cam11"
+cam0_list = os.listdir(path_cam0)
+cam1_list = os.listdir(path_cam1)
+cam0_list.sort()
+cam1_list.sort()
 
 
+i = 0
 
-dst_all = dst_F + dst_R + dst_L + dst_B
-while cv2.waitKey(0) != 27:
-    cv2.imshow("dst", dst_all)
+for cam0, cam1 in zip(cam0_list, cam1_list):
+    print(cam0,cam1)
+    cam0_img = cv2.imread(path_cam0 + "/" + cam0, cv2.IMREAD_COLOR)
+    und_cam0 = cv2.undistort(cam0_img, mtx_cam0, dist_cam0, None)
+    dst_cam0 = cv2.warpPerspective(und_cam0, H_cam0, (540,540), None, cv2.INTER_CUBIC)    
+    cam1_img = cv2.imread(path_cam1 + "/" + cam1, cv2.IMREAD_COLOR)
+    und_cam1 = cv2.undistort(cam1_img, mtx_cam1, dist_cam1, None)
+    rot_mat = cv2.getRotationMatrix2D((320,240), 315,1)
+    rot_cam1 = cv2.warpAffine(und_cam1,rot_mat,(640,480))
+    dst_cam1 = cv2.warpPerspective(rot_cam1, H_cam1, (540,540), None, cv2.INTER_CUBIC)
     
-# cv2.imshow("dst", dst_R); cv2.waitKey(0)
-# plt.imshow(rot); plt.show()
+    cv2.imshow("und_Cam0",und_cam0)
+    cv2.imshow("und_cam1",rot_cam1)
+    
+    dst_cam0[250:,:] = 0
+    dst_cam1[250:,:] = 0
+    #dst_all = dst_cam0 + dst_cam1
 
-print(H_L)
+    cv2.imshow("dst_Cam0",dst_cam0)
+    cv2.imshow("dst_cam1",dst_cam1)
+    cv2.imshow("dst_sum",dst_cam0+dst_cam1)
+
+    kernel = cv2.bitwise_and(dst_cam0,dst_cam1)
+    kernel= cv2.cvtColor(kernel,cv2.COLOR_BGR2GRAY)
+    _,kernel = cv2.threshold(kernel, 1, 255, cv2.THRESH_BINARY_INV)
+    kernel= cv2.cvtColor(kernel,cv2.COLOR_GRAY2BGR)
+
+	
+    dst_cam0 = cv2.bitwise_and(dst_cam0,kernel)
+
+    dst_all = dst_cam0+dst_cam1
+    #cv2.imwrite("dst0" + str(i).zfill(3) + ".png",dst_all)
+    i += 1
+    cv2.imshow("dst_all",dst_cam0+dst_cam1)
+    cv2.waitKey(0)
+    
